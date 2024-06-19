@@ -2,9 +2,12 @@ import Image from "next/image";
 import { AccentFont, SecondaryFont } from "./_components/fonts";
 
 async function getRecipe() {
-  const res = await fetch("http://localhost:8080/api/recipes", {
-    cache: "no-cache",
-  });
+  const res = await fetch(
+    "http://localhost:8080/api/recipes/66731fab8b585f11f2c45d21",
+    {
+      cache: "no-cache",
+    }
+  );
 
   if (!res.ok) {
     throw new Error("Failed to fetch recipe");
@@ -14,13 +17,11 @@ async function getRecipe() {
 }
 
 export default async function MainLayout() {
-  const recipes = await getRecipe();
+  const recipe = await getRecipe();
 
-  console.log(recipes);
-
-  const dish = "Pasta Carbonara";
-  const author = "Gordon Ramsay";
-  const ingredients = ["Pasta", "Egg", "Bacon", "Cheese", "Pepper"];
+  const dish = recipe.dish;
+  const author = recipe.author;
+  const ingredients = recipe.ingredients;
 
   return (
     <div

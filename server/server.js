@@ -50,26 +50,57 @@ app.use(
 
 app.use(express.json());
 
-app.get("/api/recipes", async (req, res) => {
-  try {
-    const recipes = await Recipe.find();
-    res.json(recipes);
-  } catch (err) {
-    res.status(500).send(err);
-  }
-});
-
 app.post("/api/recipes", async (req, res) => {
   const { dish, ingredients, author } = req.body;
 
-  if (!dish || !ingredients || !author) {
-    return res.status(400).json({ message: "All fields are required" });
+  if (!dish) {
+    return res.status(400).json({ message: "Dish is required" });
+  }
+
+  if (!ingredients || ingredients.length < 2) {
+    return res
+      .status(400)
+      .json({ message: "At least 2 ingredients are required" });
+  }
+
+  if (!author) {
+    return res.status(400).json({ message: "Author is required" });
   }
 
   try {
     const newRecipe = new Recipe({ dish, ingredients, author });
     await newRecipe.save();
     res.status(201).json(newRecipe);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+app.delete("/api/recipes/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ message: "ID is required" });
+  }
+
+  try {
+    await Recipe.findByIdAndDelete(id);
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+app.get("/api/recipes/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ message: "ID is required" });
+  }
+
+  try {
+    const recipe = await Recipe.findById(id);
+    res.json(recipe);
   } catch (err) {
     res.status(500).send(err);
   }
