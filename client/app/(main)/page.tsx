@@ -14,11 +14,13 @@ async function getRecipe() {
 }
 
 export default async function MainLayout() {
-  const recipe = await getRecipe();
+  const recipes = await getRecipe();
 
-  const dish = recipe.dish;
-  const author = recipe.author;
-  const ingredients = recipe.ingredients;
+  console.log(recipes);
+
+  const dish = "Pasta Carbonara";
+  const author = "Gordon Ramsay";
+  const ingredients = ["Pasta", "Egg", "Bacon", "Cheese", "Pepper"];
 
   return (
     <div
