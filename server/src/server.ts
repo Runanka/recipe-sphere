@@ -1,12 +1,13 @@
-const express = require("express");
-const cors = require("cors");
-const mongoose = require("mongoose");
-const {
+import express from "express";
+import cors from "cors";
+import mongoose from "mongoose";
+import { Response, Request } from "express";
+import {
   MONGO_IP,
   MONGO_PORT,
   MONGO_USER,
   MONGO_PASSWORD,
-} = require("./config/config");
+} from "./config/config";
 
 const port = process.env.PORT || 8080;
 const corsOrigin = process.env.CORS_ORIGIN || "http://localhost:3000";
@@ -14,20 +15,17 @@ const corsOrigin = process.env.CORS_ORIGIN || "http://localhost:3000";
 const mongoURL = `mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_IP}:${MONGO_PORT}/?authSource=admin`;
 
 const connectWithRetry = () => {
-  setTimeout(() => {
-    mongoose
-      .connect(mongoURL, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      })
-      .then(() => {
-        console.log("Connected to MongoDB");
-      })
-      .catch((e) => {
-        console.log(e);
-        retryConnection();
-      });
-  }, 5000);
+  mongoose
+    .connect(mongoURL)
+    .then(() => {
+      console.log("Connected to MongoDB");
+    })
+    .catch((e: Error) => {
+      console.log("Error: ", e);
+      setTimeout(() => {
+        connectWithRetry();
+      }, 5000);
+    });
 };
 
 connectWithRetry();
@@ -50,7 +48,17 @@ app.use(
 
 app.use(express.json());
 
-app.post("/api/recipes", async (req, res) => {
+app.get("/api/v1/recipes", (req: Request, res: Response) => {
+  try {
+    res.json({
+      message: "Hello from recipes",
+    });
+  } catch (err) {
+    res.status;
+  }
+});
+
+app.post("/api/v1/recipes", async (req: Request, res: Response) => {
   const { dish, ingredients, author } = req.body;
 
   if (!dish) {
@@ -76,7 +84,7 @@ app.post("/api/recipes", async (req, res) => {
   }
 });
 
-app.delete("/api/recipes/:id", async (req, res) => {
+app.delete("/api/v1/recipes/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
 
   if (!id) {
@@ -91,7 +99,7 @@ app.delete("/api/recipes/:id", async (req, res) => {
   }
 });
 
-app.get("/api/recipes/:id", async (req, res) => {
+app.get("/api/v1/recipes/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
 
   if (!id) {

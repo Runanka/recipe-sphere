@@ -3,7 +3,7 @@ import { AccentFont, SecondaryFont } from "./_components/fonts";
 
 async function getRecipe() {
   const res = await fetch(
-    "http://localhost:8080/api/recipes/66731fab8b585f11f2c45d21",
+    "http://localhost:8080/api/v1/recipes/66741d5c42c14a4948af24f5",
     {
       cache: "no-cache",
     }
