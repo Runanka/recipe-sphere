@@ -1,0 +1,22 @@
+version: "3"
+
+services:
+  node-server:
+    build:
+      context: .
+      target: build
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - MONGO_USER=root
+      - MONGO_PASSWORD=password
+    command: ["npm", "run", "dev"]
+
+  mongo:
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=password

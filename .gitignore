@@ -130,11 +130,6 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# Docker
-Dockerfile
-.dockerignore
-docker-compose.yml
-docker-compose*
 *.env  # if you have any Docker .env files
 
 # MongoDB

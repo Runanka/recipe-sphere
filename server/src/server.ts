@@ -1,13 +1,20 @@
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import { Response, Request } from "express";
+import session from "express-session";
+import IORedis from "ioredis";
+import RedisStore from "connect-redis";
+
 import {
   MONGO_IP,
   MONGO_PORT,
   MONGO_USER,
   MONGO_PASSWORD,
+  SESSION_SECRET,
+  REDIS_URL,
 } from "./config/config";
+import { recipeRouter } from "./routes/recipeRoutes";
+import { userRouter } from "./routes/userRoutes";
 
 const port = process.env.PORT || 8080;
 const corsOrigin = process.env.CORS_ORIGIN || "http://localhost:3000";
@@ -30,90 +37,44 @@ const connectWithRetry = () => {
 
 connectWithRetry();
 
-const recipeSchema = new mongoose.Schema({
-  dish: String,
-  ingredients: [String],
-  author: String,
+const redisClient = new IORedis("redis");
+redisClient.on("error", (err) => {
+  console.log(err);
 });
 
-const Recipe = mongoose.model("Recipe", recipeSchema);
+const redisStore = new RedisStore({ client: redisClient });
 
 const app = express();
+
+app.set("trust proxy", 1);
 
 app.use(
   cors({
     origin: corsOrigin,
+    credentials: true,
   })
 );
 
 app.use(express.json());
 
-app.get("/api/v1/recipes", (req: Request, res: Response) => {
-  try {
-    res.json({
-      message: "Hello from recipes",
-    });
-  } catch (err) {
-    res.status;
-  }
-});
-
-app.post("/api/v1/recipes", async (req: Request, res: Response) => {
-  const { dish, ingredients, author } = req.body;
-
-  if (!dish) {
-    return res.status(400).json({ message: "Dish is required" });
-  }
-
-  if (!ingredients || ingredients.length < 2) {
-    return res
-      .status(400)
-      .json({ message: "At least 2 ingredients are required" });
-  }
-
-  if (!author) {
-    return res.status(400).json({ message: "Author is required" });
-  }
-
-  try {
-    const newRecipe = new Recipe({ dish, ingredients, author });
-    await newRecipe.save();
-    res.status(201).json(newRecipe);
-  } catch (err) {
-    res.status(500).send(err);
-  }
-});
-
-app.delete("/api/v1/recipes/:id", async (req: Request, res: Response) => {
-  const { id } = req.params;
-
-  if (!id) {
-    return res.status(400).json({ message: "ID is required" });
-  }
-
-  try {
-    await Recipe.findByIdAndDelete(id);
-    res.status(204).send();
-  } catch (err) {
-    res.status(500).send(err);
-  }
-});
-
-app.get("/api/v1/recipes/:id", async (req: Request, res: Response) => {
-  const { id } = req.params;
-
-  if (!id) {
-    return res.status(400).json({ message: "ID is required" });
-  }
-
-  try {
-    const recipe = await Recipe.findById(id);
-    res.json(recipe);
-  } catch (err) {
-    res.status(500).send(err);
-  }
-});
+app.use(
+  session({
+    store: redisStore,
+    secret: "secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false,
+      httpOnly: true,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    },
+  })
+);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+
+app.use("/api/v1/users", userRouter);
+
+app.use("/api/v1/recipes", recipeRouter);
